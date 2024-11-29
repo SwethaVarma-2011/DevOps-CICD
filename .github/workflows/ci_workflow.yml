@@ -76,7 +76,7 @@ jobs:
           tags: ${{secrets.DOCKERHUB_USERNAME}}/web-app:${{github.run_id}}  
 
   update_helm_values:
-    runs_on: unbuntu_latest
+    runs-on: unbuntu-latest
     needs: build_and_push_docker_image
     steps:
       - name: checkout repository
