@@ -10,7 +10,7 @@ on:
 
 jobs:
   name: build_and_test
-    runs-on: ubuntu_latest 
+    runs-on: ubuntu-latest 
     steps: 
       - name: Checkout source code
         uses: actions/checkout@v3
