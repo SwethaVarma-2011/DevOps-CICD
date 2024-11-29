@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app-deployment
+  labels:
+    app: web-app
+    type: python-web-app
+spec:
+  replicas: 1
+  selector: 
+    matchLabels: 
+      app: web-app
+  template:
+    metadata:
+      labels:
+        app: web-app
+    spec:
+      containers:
+        - name: web-container
+          image: swethavarma/mywebapp
+          ports:
+            - containerPort: 8080    
+      imagePullSecrets:
+        - name: dockerhub-secret
+   

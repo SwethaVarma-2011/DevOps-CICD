@@ -1,0 +1,95 @@
+name: CI workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_requests:
+    branches:
+      - main
+
+jobs:
+  name: build_and_test
+    runs-on: ubuntu_latest 
+    steps: 
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12 
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt    
+
+      - name: Run unit tests             
+        run: |
+          pytest --junitxml=test-results.xml
+
+      - name: Archive test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: test-results.xml    
+
+  name: code_analysis
+    runs-on: unbuntu-latest
+    steps:
+      - name: checkout source code
+        uses: actions/checkout@v3 
+
+      - name: Perform code scan
+        uses: github/codeql-action/init@v2
+        with:
+          languages: python
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v2
+
+  name: build_and_push_docker_image
+    runs-on: ubuntu-latest
+    needs: Build and test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1 
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{secrets.DOCKERHUB_USERNAME}}
+          password: ${{secrets.DOCKERHUB_TOKEN}}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          content: .
+          file: ./dockerfile
+          push: true
+          tags: ${{secrets.DOCKERHUB_USERNAME}}/web-app:${{github.run_id}}  
+
+  name: update_helm_values
+    runs_on: unbuntu_latest
+    needs: build_and_push_docker_image
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{secrets.TOKEN}}
+
+      - name: Update tag in Helm chart
+        run: |
+          sed -i 's/tag: .*/tag: "${{github.run_id}}"/' helm/python-web-app/values.yaml
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.email "swethavarma432@gmail.com"
+          git config --global user.name "Swetha"
+          git add ./
+          git commit -m "Updating changes"
+          git push    
