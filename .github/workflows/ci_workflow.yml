@@ -9,7 +9,8 @@ on:
       - main
 
 jobs:
-  name: build_and_test
+
+  build_and_test:
     runs-on: ubuntu-latest 
     steps: 
       - name: Checkout source code
@@ -35,7 +36,8 @@ jobs:
           name: test-results
           path: test-results.xml    
 
-  name: code_analysis
+  code_analysis:
+
     runs-on: unbuntu-latest
     steps:
       - name: checkout source code
@@ -49,7 +51,7 @@ jobs:
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v2
 
-  name: build_and_push_docker_image
+  build_and_push_docker_image:
     runs-on: ubuntu-latest
     needs: Build and test
     steps:
@@ -73,7 +75,7 @@ jobs:
           push: true
           tags: ${{secrets.DOCKERHUB_USERNAME}}/web-app:${{github.run_id}}  
 
-  name: update_helm_values
+  update_helm_values:
     runs_on: unbuntu_latest
     needs: build_and_push_docker_image
     steps:
